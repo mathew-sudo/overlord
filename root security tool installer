@@ -1,31 +1,20 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Display current UTC date and time in specified format
-echo "Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted):" $(date -u "+%Y-%m-%d %H:%M:%S")
+echo "Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): $(date -u "+%Y-%m-%d %H:%M:%S")"
 
 # Display current user's login
-echo "Current User's Login:" $(whoami)
-
-#!/data/data/com.termux/files/usr/bin/bash
+echo "Current User's Login: $(whoami)"
 
 # Function to get Termux-specific user information
 get_user_info() {
-    # Get Termux username from environment variable
     TERMUX_USERNAME="$USER"
-    
-    # Get user's home directory
     USER_HOME="$HOME"
-    
-    # Check if running with sudo
     IS_SUDO=false
     if [ "$(id -u)" = "0" ]; then
         IS_SUDO=true
     fi
-    
-    # Get user groups
     USER_GROUPS=$(groups)
-    
-    # Display all information
     echo "System Information:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "Current Date/Time (UTC): $(date -u "+%Y-%m-%d %H:%M:%S")"
@@ -36,25 +25,141 @@ get_user_info() {
     echo "Terminal: $TERM"
     echo "Shell: $SHELL"
     if [ -f "$PREFIX/etc/motd" ]; then
-        echo "Termux Version: $(cat $PREFIX/etc/motd | grep -o "Welcome to Termux.*" | cut -d' ' -f4)"
+        echo "Termux Version: $(grep -o 'Welcome to Termux.*' $PREFIX/etc/motd | cut -d' ' -f4)"
     fi
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
-# Execute the function
-get_user_info
+# Function to display environment info for VM (fix: typo in function name)
+display_environment() {
+    echo "VM/Environment Information:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "OS: $(uname -o 2>/dev/null || uname -s)"
+    echo "Kernel: $(uname -r)"
+    echo "Architecture: $(uname -m)"
+    echo "CPU Info:"
+    grep -m 1 'model name' /proc/cpuinfo 2>/dev/null || echo "N/A"
+    echo "Memory Info:"
+    grep MemTotal /proc/meminfo 2>/dev/null || echo "N/A"
+    echo "Virtualization Check:"
+    if grep -q -i 'hypervisor' /proc/cpuinfo 2>/dev/null; then
+        echo "Running inside a VM (hypervisor detected)"
+    else
+        echo "No hypervisor detected"
+    fi
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
 
-System Information:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Current Date/Time (UTC): 2025-05-19 05:24:09
-Username: mathew-sudo
-Home Directory: /data/data/com.termux/files/home
-Root Access: true
-User Groups: mathew-sudo wheel
-Terminal: xterm-256color
-Shell: /data/data/com.termux/files/usr/bin/bash
-Termux Version: 0.118.0
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Function to display configuration and auto-setup
+display_config() {
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Root Security Tool Installer Configuration"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "User: $(whoami)"
+    echo "User ID: $(id -u)"
+    echo "Groups: $(groups)"
+    echo "Home: $HOME"
+    echo "Shell: $SHELL"
+    echo "Termux: $([ -n \"$PREFIX\" ] && echo 'Yes' || echo 'No')"
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        echo "OS: $PRETTY_NAME"
+    elif [ -f /system/build.prop ]; then
+        echo "OS: Android (detected via build.prop)"
+    else
+        echo "OS: Unknown"
+    fi
+    echo "Kali OS Display: $([ -d $HOME/kalifs-arm64 ] && echo 'Installed' || echo 'Not Installed')"
+    echo "Root Bypass: $([ \"$(id -u)\" = \"0\" ] && echo 'Not Needed' || echo 'Enabled (using proot/fake root)')"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+# Function to auto-configure sudo/proot if needed
+auto_setup_root_bypass() {
+    if [ "$(id -u)" != "0" ]; then
+        echo "Non-root user detected. Setting up root bypass (proot)..."
+        pkg install proot -y
+        mkdir -p $HOME/.termux/boot
+        cat > $HOME/.termux/boot/proot_startup.sh << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+proot --link2symlink -0 -l -p -L -H $HOME/.termux/boot/fake_root_shell.sh
+EOF
+        cat > $HOME/.termux/boot/fake_root_shell.sh << 'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+echo "PRoot is active - fake root environment enabled"
+export PATH=$PATH:/system/bin:/system/xbin
+export LD_LIBRARY_PATH=/system/lib
+alias su="echo Already root!"
+PS1="# "
+$@
+EOF
+        chmod +x $HOME/.termux/boot/*.sh
+        echo "Root bypass setup complete."
+    else
+        echo "Root user detected. No root bypass needed."
+    fi
+}
+
+# Function to alter Termux display to show Kali OS (if installed)
+alter_termux_display_kali() {
+    if [ -d "$HOME/kalifs-arm64" ] || [ -d "$HOME/kalifs-armhf" ]; then
+        echo "Kali Linux detected in Termux. Altering display..."
+        echo "Welcome to Kali Linux (via Termux)" > $HOME/.termux/motd
+    fi
+}
+
+# Function to display available commands
+show_commands() {
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Available Commands:"
+    echo "  show_commands                - Display this command list"
+    echo "  get_user_info                - Show Termux user info"
+    echo "  display_environment          - Show VM/environment info"
+    echo "  display_config               - Show installer config"
+    echo "  auto_setup_root_bypass       - Setup root bypass if needed"
+    echo "  alter_termux_display_kali    - Show Kali OS in Termux MOTD"
+    echo "  setup_test_environment       - Setup secondary test environment"
+    echo "  install_exploit_tools        - Install extra exploit tools"
+    echo "  install_security_gems        - Install extra Ruby security gems"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+# Function to install extra exploit tools
+install_exploit_tools() {
+    echo "Installing ExploitDB SearchSploit..."
+    pkg install git -y && git clone https://github.com/offensive-security/exploitdb.git && cd exploitdb && git clone https://github.com/offensive-security/searchsploit.git
+    echo "Installing sqlninja (SQL Server exploit)..."
+    pkg install git -y && git clone https://github.com/xxgrunge/sqlninja.git
+    echo "Installing Routersploit (exploit framework)..."
+    pkg install git python -y && git clone https://github.com/threat9/routersploit.git && cd routersploit && pip install -r requirements.txt
+    echo "Installing Commix (Automated Command Injection)..."
+    pkg install git python -y && git clone https://github.com/commixproject/commix.git
+    echo "Installing BeEF XSS Framework..."
+    pkg install git ruby -y && git clone https://github.com/beefproject/beef.git && cd beef && bundle install
+    echo "Installing Zphisher (Phishing toolkit)..."
+    pkg install git php openssh -y && git clone https://github.com/htr-tech/zphisher.git
+    echo "Exploit tools installation complete."
+}
+
+# Function to install extra Ruby security gems
+install_security_gems() {
+    echo "Installing Metasploit Community Gems..."
+    pkg install ruby -y && gem install rex msfrpc-client metasploit_data_models
+    echo "Installing Wpscan (WordPress vulnerability scanner)..."
+    pkg install ruby -y && gem install wpscan
+    echo "Installing Arachni (web app security scanner)..."
+    pkg install ruby -y && gem install arachni
+    echo "Installing Nokogiri (Ruby gem for parsing HTML/XML)..."
+    pkg install ruby -y && gem install nokogiri
+    echo "Ruby security gems installation complete."
+}
+
+# Execute the functions
+get_user_info
+display_environment
+display_config
+auto_setup_root_bypass
+alter_termux_display_kali
 
 #!/data/data/com.termux/files/usr/bin/bash
 # Termux Tool Installer script
@@ -860,744 +965,96 @@ else
 fi
 echo ""
 
-echo "Installing MTK Tools..."
-pkg install git -y && git clone https://github.com/bkerler/mtkclient && cd mtkclient && pip install -r requirements.txt
+echo "Installing MagiskHide Props Config (root bypass)..."
+pkg install git -y && git clone https://github.com/Magisk-Modules-Repo/MagiskHide-Props-Config.git
 if [ $? -eq 0 ]; then
-    echo "MTK Tools installed successfully."
+    echo "MagiskHide Props Config installed successfully."
 else
-    echo "Error installing MTK Tools."
+    echo "Error installing MagiskHide Props Config."
 fi
 echo ""
 
-echo "Installing Termux API with Root..."
-pkg install termux-api -y && pkg install tsu -y
+echo "Installing Frida (dynamic instrumentation toolkit)..."
+pkg install python -y && pip install frida-tools
 if [ $? -eq 0 ]; then
-    echo "Termux API with Root installed successfully."
+    echo "Frida installed successfully."
 else
-    echo "Error installing Termux API with Root."
+    echo "Error installing Frida."
 fi
 echo ""
 
-echo "Installing Magisk Manager..."
-pkg install wget -y && wget https://github.com/topjohnwu/Magisk/releases/download/v26.3/Magisk-v26.3.apk -O magisk.apk && chmod +x magisk.apk
+echo "Installing RootCloak (root detection bypass)..."
+pkg install git -y && git clone https://github.com/devadvance/rootcloak.git
 if [ $? -eq 0 ]; then
-    echo "Magisk Manager installed successfully."
+    echo "RootCloak installed successfully."
 else
-    echo "Error installing Magisk Manager."
+    echo "Error installing RootCloak."
 fi
 echo ""
 
-echo "Installing Magisk Systemless..."
-pkg install wget -y && wget https://github.com/topjohnwu/Magisk/releases/download/v26.3/Magisk-v26.3.apk -O magisk.apk && chmod +x magisk.apk
+echo "Installing ExploitDB SearchSploit..."
+pkg install git -y && git clone https://github.com/offensive-security/exploitdb.git && cd exploitdb && git clone https://github.com/offensive-security/searchsploit.git
 if [ $? -eq 0 ]; then
-    echo "Magisk Systemless installed successfully."
+    echo "ExploitDB SearchSploit installed successfully."
 else
-    echo "Error installing Magisk Systemless."
+    echo "Error installing ExploitDB SearchSploit."
 fi
 echo ""
 
-echo "Installing Android SU Binary..."
-pkg install git -y && git clone https://github.com/topjohnwu/Magisk.git && cd Magisk/native/jni && ndk-build
+echo "Installing sqlninja (SQL Server exploit)..."
+pkg install git -y && git clone https://github.com/xxgrunge/sqlninja.git
 if [ $? -eq 0 ]; then
-    echo "Android SU Binary installed successfully."
+    echo "sqlninja installed successfully."
 else
-    echo "Error installing Android SU Binary."
+    echo "Error installing sqlninja."
 fi
 echo ""
 
-echo "Installing Popular Magisk Modules..."
-pkg install git -y && mkdir -p magisk_modules && cd magisk_modules && git clone https://github.com/Zackptg5/MMT-Extended.git && git clone https://github.com/Magisk-Modules-Repo/MagiskHide-Props-Config.git && git clone https://github.com/Magisk-Modules-Repo/wifi-bonding.git
+echo "Installing Routersploit (exploit framework)..."
+pkg install git python -y && git clone https://github.com/threat9/routersploit.git && cd routersploit && pip install -r requirements.txt
 if [ $? -eq 0 ]; then
-    echo "Popular Magisk Modules installed successfully."
+    echo "Routersploit installed successfully."
 else
-    echo "Error installing Popular Magisk Modules."
+    echo "Error installing Routersploit."
 fi
 echo ""
 
-echo "Installing TWRP Recovery..."
-pkg install wget -y && mkdir -p twrp && cd twrp && wget https://dl.twrp.me/twrp-installer-3.7.0_11-0-unified.zip -O twrp-installer.zip
+echo "Installing Metasploit Community Gems..."
+pkg install ruby -y && gem install rex msfrpc-client metasploit_data_models
 if [ $? -eq 0 ]; then
-    echo "TWRP Recovery installed successfully."
+    echo "Metasploit Community Gems installed successfully."
 else
-    echo "Error installing TWRP Recovery."
+    echo "Error installing Metasploit Community Gems."
 fi
 echo ""
 
-echo "Installing LineageOS Recovery..."
-pkg install wget -y && mkdir -p lineage && cd lineage && wget https://download.lineageos.org/tools/extract_utils.sh -O extract_utils.sh && chmod +x extract_utils.sh
+echo "Installing Wpscan (WordPress vulnerability scanner)..."
+pkg install ruby -y && gem install wpscan
 if [ $? -eq 0 ]; then
-    echo "LineageOS Recovery installed successfully."
+    echo "Wpscan installed successfully."
 else
-    echo "Error installing LineageOS Recovery."
+    echo "Error installing Wpscan."
 fi
 echo ""
 
-echo "Installing Root Checker..."
-pkg install wget -y && wget https://play.google.com/store/apps/details?id=com.joeykrim.rootcheck -O root-checker.apk
+echo "Installing Arachni (web app security scanner)..."
+pkg install ruby -y && gem install arachni
 if [ $? -eq 0 ]; then
-    echo "Root Checker installed successfully."
+    echo "Arachni installed successfully."
 else
-    echo "Error installing Root Checker."
+    echo "Error installing Arachni."
 fi
 echo ""
 
-echo "Installing BusyBox for Android..."
-pkg install wget -y && wget https://github.com/meefik/busybox/releases/download/1.33.1-1/busybox-v1.33.1-1.apk -O busybox.apk && chmod +x busybox.apk
+echo "Installing Nokogiri (Ruby gem for parsing HTML/XML)..."
+pkg install ruby -y && gem install nokogiri
 if [ $? -eq 0 ]; then
-    echo "BusyBox for Android installed successfully."
+    echo "Nokogiri installed successfully."
 else
-    echo "Error installing BusyBox for Android."
-fi
-echo ""
-
-echo "Installing ADB & Fastboot..."
-pkg install android-tools -y
-if [ $? -eq 0 ]; then
-    echo "ADB & Fastboot installed successfully."
-else
-    echo "Error installing ADB & Fastboot."
-fi
-echo ""
-
-echo "Installing EdXposed Framework..."
-pkg install wget -y && wget https://github.com/ElderDrivers/EdXposed/releases/download/v0.5.2.2/riru-edxposed-v0.5.2.2_4577-master-release.zip -O edxposed.zip
-if [ $? -eq 0 ]; then
-    echo "EdXposed Framework installed successfully."
-else
-    echo "Error installing EdXposed Framework."
-fi
-echo ""
-
-echo "Installing LSPosed Framework..."
-pkg install wget -y && wget https://github.com/LSPosed/LSPosed/releases/download/v1.8.6/LSPosed-v1.8.6-6860-zygisk-release.zip -O lsposed.zip
-if [ $? -eq 0 ]; then
-    echo "LSPosed Framework installed successfully."
-else
-    echo "Error installing LSPosed Framework."
-fi
-echo ""
-
-echo "Installing SuperUser Access..."
-pkg install git -y && git clone https://github.com/koush/Superuser.git && cd Superuser && ./gradlew assembleRelease
-if [ $? -eq 0 ]; then
-    echo "SuperUser Access installed successfully."
-else
-    echo "Error installing SuperUser Access."
-fi
-echo ""
-
-echo "Installing One Click Root..."
-pkg install wget -y && wget https://oneclickroot.com/download -O one-click-root.apk && chmod +x one-click-root.apk
-if [ $? -eq 0 ]; then
-    echo "One Click Root installed successfully."
-else
-    echo "Error installing One Click Root."
-fi
-echo ""
-
-echo "Installing Framaroot..."
-pkg install wget -y && wget https://framaroot.net/download/Framaroot-1.9.3.apk -O framaroot.apk && chmod +x framaroot.apk
-if [ $? -eq 0 ]; then
-    echo "Framaroot installed successfully."
-else
-    echo "Error installing Framaroot."
-fi
-echo ""
-
-echo "Installing Root Genius..."
-pkg install wget -y && wget https://rootgenius.com/download -O root-genius.apk && chmod +x root-genius.apk
-if [ $? -eq 0 ]; then
-    echo "Root Genius installed successfully."
-else
-    echo "Error installing Root Genius."
-fi
-echo ""
-
-echo "Installing Kingo Root..."
-pkg install wget -y && wget https://kingoapp.com/kingoroot.apk -O kingo-root.apk && chmod +x kingo-root.apk
-if [ $? -eq 0 ]; then
-    echo "Kingo Root installed successfully."
-else
-    echo "Error installing Kingo Root."
-fi
-echo ""
-
-echo "Installing iRoot..."
-pkg install wget -y && wget https://iroot.com/download/iroot.apk -O iroot.apk && chmod +x iroot.apk
-if [ $? -eq 0 ]; then
-    echo "iRoot installed successfully."
-else
-    echo "Error installing iRoot."
-fi
-echo ""
-
-echo "Installing Z4Root..."
-pkg install wget -y && wget https://z4root.net/z4root.apk -O z4root.apk && chmod +x z4root.apk
-if [ $? -eq 0 ]; then
-    echo "Z4Root installed successfully."
-else
-    echo "Error installing Z4Root."
-fi
-echo ""
-
-echo "Installing Root Master..."
-pkg install wget -y && wget https://rootmaster.net/download -O root-master.apk && chmod +x root-master.apk
-if [ $? -eq 0 ]; then
-    echo "Root Master installed successfully."
-else
-    echo "Error installing Root Master."
-fi
-echo ""
-
-echo "Installing CF-Auto-Root..."
-pkg install wget -y && wget https://autoroot.chainfire.eu -O cf-auto-root.zip
-if [ $? -eq 0 ]; then
-    echo "CF-Auto-Root installed successfully."
-else
-    echo "Error installing CF-Auto-Root."
-fi
-echo ""
-
-echo "Installing MTK Easy SU..."
-pkg install wget -y && wget https://github.com/JunioJsv/mtk-easy-su/releases/download/2.0.3/app-release.apk -O mtk-easy-su.apk && chmod +x mtk-easy-su.apk
-if [ $? -eq 0 ]; then
-    echo "MTK Easy SU installed successfully."
-else
-    echo "Error installing MTK Easy SU."
-fi
-echo ""
-
-echo "Installing Root Explorer..."
-pkg install wget -y && wget https://rootexplorer.co/download -O root-explorer.apk && chmod +x root-explorer.apk
-if [ $? -eq 0 ]; then
-    echo "Root Explorer installed successfully."
-else
-    echo "Error installing Root Explorer."
-fi
-echo ""
-
-echo "Installing Terminal Emulator..."
-pkg install wget -y && wget https://f-droid.org/repo/jackpal.androidterm_72.apk -O terminal-emulator.apk && chmod +x terminal-emulator.apk
-if [ $? -eq 0 ]; then
-    echo "Terminal Emulator installed successfully."
-else
-    echo "Error installing Terminal Emulator."
-fi
-echo ""
-
-echo "Installing Root Browser..."
-pkg install wget -y && wget https://rootbrowser.co/download -O root-browser.apk && chmod +x root-browser.apk
-if [ $? -eq 0 ]; then
-    echo "Root Browser installed successfully."
-else
-    echo "Error installing Root Browser."
-fi
-echo ""
-
-echo "Installing UnlockRoot..."
-pkg install wget -y && wget https://unlockroot.pro/download -O unlockroot.apk && chmod +x unlockroot.apk
-if [ $? -eq 0 ]; then
-    echo "UnlockRoot installed successfully."
-else
-    echo "Error installing UnlockRoot."
-fi
-echo ""
-
-echo "Installing Hydra..."
-pkg install hydra -y
-if [ $? -eq 0 ]; then
-    echo "Hydra installed successfully."
-else
-    echo "Error installing Hydra."
-fi
-echo ""
-
-echo "Installing John the Ripper..."
-pkg install john -y
-if [ $? -eq 0 ]; then
-    echo "John the Ripper installed successfully."
-else
-    echo "Error installing John the Ripper."
-fi
-echo ""
-
-echo "Installing Hashcat..."
-pkg install hashcat -y
-if [ $? -eq 0 ]; then
-    echo "Hashcat installed successfully."
-else
-    echo "Error installing Hashcat."
-fi
-echo ""
-
-echo "Installing Crunch..."
-pkg install crunch -y
-if [ $? -eq 0 ]; then
-    echo "Crunch installed successfully."
-else
-    echo "Error installing Crunch."
-fi
-echo ""
-
-echo "Installing CeWL..."
-pkg install ruby -y && gem install cewl
-if [ $? -eq 0 ]; then
-    echo "CeWL installed successfully."
-else
-    echo "Error installing CeWL."
-fi
-echo ""
-
-echo "Installing Medusa..."
-pkg install medusa -y
-if [ $? -eq 0 ]; then
-    echo "Medusa installed successfully."
-else
-    echo "Error installing Medusa."
-fi
-echo ""
-
-echo "Installing Ncrack..."
-pkg install ncrack -y
-if [ $? -eq 0 ]; then
-    echo "Ncrack installed successfully."
-else
-    echo "Error installing Ncrack."
-fi
-echo ""
-
-echo "Installing Credmap..."
-pkg install git -y && pkg install python -y && git clone https://github.com/lightos/credmap.git && cd credmap && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Credmap installed successfully."
-else
-    echo "Error installing Credmap."
-fi
-echo ""
-
-echo "Installing Johnny..."
-pkg install qt5-base -y && git clone https://github.com/openwall/johnny.git && cd johnny && qmake && make
-if [ $? -eq 0 ]; then
-    echo "Johnny installed successfully."
-else
-    echo "Error installing Johnny."
-fi
-echo ""
-
-echo "Installing Wordlistctl..."
-pkg install git -y && git clone https://github.com/BlackArch/wordlistctl.git && cd wordlistctl && chmod +x wordlistctl.py
-if [ $? -eq 0 ]; then
-    echo "Wordlistctl installed successfully."
-else
-    echo "Error installing Wordlistctl."
-fi
-echo ""
-
-echo "Installing CUPP..."
-pkg install git -y && pkg install python -y && git clone https://github.com/Mebus/cupp.git && cd cupp && chmod +x cupp.py
-if [ $? -eq 0 ]; then
-    echo "CUPP installed successfully."
-else
-    echo "Error installing CUPP."
-fi
-echo ""
-
-echo "Installing BruteSpray..."
-pkg install git -y && pkg install python -y && git clone https://github.com/x90skysn3k/brutespray.git && cd brutespray && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "BruteSpray installed successfully."
-else
-    echo "Error installing BruteSpray."
-fi
-echo ""
-
-echo "Installing Mimikatz..."
-pkg install git -y && git clone https://github.com/gentilkiwi/mimikatz.git
-if [ $? -eq 0 ]; then
-    echo "Mimikatz installed successfully."
-else
-    echo "Error installing Mimikatz."
-fi
-echo ""
-
-echo "Installing Patator..."
-pkg install git -y && pkg install python -y && git clone https://github.com/lanjelot/patator.git && cd patator && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Patator installed successfully."
-else
-    echo "Error installing Patator."
-fi
-echo ""
-
-echo "Installing THC Hydra GUI..."
-pkg install git -y && pkg install python -y && git clone https://github.com/KALILINUXTRICKSYT/eashydra.git && cd eashydra && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "THC Hydra GUI installed successfully."
-else
-    echo "Error installing THC Hydra GUI."
-fi
-echo ""
-
-echo "Installing Chntpw..."
-pkg install chntpw -y
-if [ $? -eq 0 ]; then
-    echo "Chntpw installed successfully."
-else
-    echo "Error installing Chntpw."
-fi
-echo ""
-
-echo "Installing Maskprocessor..."
-pkg install git -y && git clone https://github.com/hashcat/maskprocessor.git && cd maskprocessor && make
-if [ $? -eq 0 ]; then
-    echo "Maskprocessor installed successfully."
-else
-    echo "Error installing Maskprocessor."
-fi
-echo ""
-
-echo "Installing Ophcrack..."
-pkg install ophcrack -y
-if [ $? -eq 0 ]; then
-    echo "Ophcrack installed successfully."
-else
-    echo "Error installing Ophcrack."
-fi
-echo ""
-
-echo "Installing pwdump..."
-pkg install git -y && git clone https://github.com/Seabreg/pwdump.git && cd pwdump && make
-if [ $? -eq 0 ]; then
-    echo "pwdump installed successfully."
-else
-    echo "Error installing pwdump."
-fi
-echo ""
-
-echo "Installing Samdump2..."
-pkg install samdump2 -y
-if [ $? -eq 0 ]; then
-    echo "Samdump2 installed successfully."
-else
-    echo "Error installing Samdump2."
-fi
-echo ""
-
-echo "Installing Wireshark CLI (tshark)..."
-pkg install tshark -y
-if [ $? -eq 0 ]; then
-    echo "Wireshark CLI (tshark) installed successfully."
-else
-    echo "Error installing Wireshark CLI (tshark)."
-fi
-echo ""
-
-echo "Installing Nmap..."
-pkg install nmap -y
-if [ $? -eq 0 ]; then
-    echo "Nmap installed successfully."
-else
-    echo "Error installing Nmap."
-fi
-echo ""
-
-echo "Installing Netcat..."
-pkg install netcat -y
-if [ $? -eq 0 ]; then
-    echo "Netcat installed successfully."
-else
-    echo "Error installing Netcat."
-fi
-echo ""
-
-echo "Installing SQLMap..."
-pkg install python -y && pip install sqlmap
-if [ $? -eq 0 ]; then
-    echo "SQLMap installed successfully."
-else
-    echo "Error installing SQLMap."
-fi
-echo ""
-
-echo "Installing Nikto..."
-pkg install perl -y && cpan install Net::SSLeay && git clone https://github.com/sullo/nikto.git
-if [ $? -eq 0 ]; then
-    echo "Nikto installed successfully."
-else
-    echo "Error installing Nikto."
-fi
-echo ""
-
-echo "Installing DIRB..."
-pkg install dirb -y
-if [ $? -eq 0 ]; then
-    echo "DIRB installed successfully."
-else
-    echo "Error installing DIRB."
-fi
-echo ""
-
-echo "Installing Bettercap..."
-pkg install bettercap -y
-if [ $? -eq 0 ]; then
-    echo "Bettercap installed successfully."
-else
-    echo "Error installing Bettercap."
-fi
-echo ""
-
-echo "Installing Ettercap..."
-pkg install ettercap -y
-if [ $? -eq 0 ]; then
-    echo "Ettercap installed successfully."
-else
-    echo "Error installing Ettercap."
-fi
-echo ""
-
-echo "Installing Aircrack-ng..."
-pkg install aircrack-ng -y
-if [ $? -eq 0 ]; then
-    echo "Aircrack-ng installed successfully."
-else
-    echo "Error installing Aircrack-ng."
-fi
-echo ""
-
-echo "Installing Reaver..."
-pkg install reaver -y
-if [ $? -eq 0 ]; then
-    echo "Reaver installed successfully."
-else
-    echo "Error installing Reaver."
-fi
-echo ""
-
-echo "Installing Wifite..."
-pkg install git -y && pkg install python -y && git clone https://github.com/derv82/wifite.git && cd wifite && chmod +x wifite.py
-if [ $? -eq 0 ]; then
-    echo "Wifite installed successfully."
-else
-    echo "Error installing Wifite."
-fi
-echo ""
-
-echo "Installing Hping3..."
-pkg install hping3 -y
-if [ $? -eq 0 ]; then
-    echo "Hping3 installed successfully."
-else
-    echo "Error installing Hping3."
-fi
-echo ""
-
-echo "Installing Masscan..."
-pkg install masscan -y
-if [ $? -eq 0 ]; then
-    echo "Masscan installed successfully."
-else
-    echo "Error installing Masscan."
-fi
-echo ""
-
-echo "Installing DNSenum..."
-pkg install perl -y && pkg install git -y && git clone https://github.com/fwaeytens/dnsenum.git && cd dnsenum && chmod +x dnsenum.pl
-if [ $? -eq 0 ]; then
-    echo "DNSenum installed successfully."
-else
-    echo "Error installing DNSenum."
-fi
-echo ""
-
-echo "Installing dsniff..."
-pkg install dsniff -y
-if [ $? -eq 0 ]; then
-    echo "dsniff installed successfully."
-else
-    echo "Error installing dsniff."
-fi
-echo ""
-
-echo "Installing Responder..."
-pkg install git -y && pkg install python -y && git clone https://github.com/lgandx/Responder.git && cd Responder && chmod +x Responder.py
-if [ $? -eq 0 ]; then
-    echo "Responder installed successfully."
-else
-    echo "Error installing Responder."
-fi
-echo ""
-
-echo "Installing Foremost..."
-pkg install foremost -y
-if [ $? -eq 0 ]; then
-    echo "Foremost installed successfully."
-else
-    echo "Error installing Foremost."
-fi
-echo ""
-
-echo "Installing Volatility..."
-pkg install python -y && pip install volatility
-if [ $? -eq 0 ]; then
-    echo "Volatility installed successfully."
-else
-    echo "Error installing Volatility."
-fi
-echo ""
-
-echo "Installing Autopsy..."
-pkg install sleuthkit -y && pkg install git -y && git clone https://github.com/sleuthkit/autopsy.git
-if [ $? -eq 0 ]; then
-    echo "Autopsy installed successfully."
-else
-    echo "Error installing Autopsy."
-fi
-echo ""
-
-echo "Installing Scalpel..."
-pkg install scalpel -y
-if [ $? -eq 0 ]; then
-    echo "Scalpel installed successfully."
-else
-    echo "Error installing Scalpel."
-fi
-echo ""
-
-echo "Installing ExifTool..."
-pkg install exiftool -y
-if [ $? -eq 0 ]; then
-    echo "ExifTool installed successfully."
-else
-    echo "Error installing ExifTool."
-fi
-echo ""
-
-echo "Installing Binwalk..."
-pkg install binwalk -y
-if [ $? -eq 0 ]; then
-    echo "Binwalk installed successfully."
-else
-    echo "Error installing Binwalk."
-fi
-echo ""
-
-echo "Installing ddrescue..."
-pkg install ddrescue -y
-if [ $? -eq 0 ]; then
-    echo "ddrescue installed successfully."
-else
-    echo "Error installing ddrescue."
-fi
-echo ""
-
-echo "Installing TestDisk..."
-pkg install testdisk -y
-if [ $? -eq 0 ]; then
-    echo "TestDisk installed successfully."
-else
-    echo "Error installing TestDisk."
-fi
-echo ""
-
-echo "Installing PhotoRec..."
-pkg install testdisk -y
-if [ $? -eq 0 ]; then
-    echo "PhotoRec installed successfully."
-else
-    echo "Error installing PhotoRec."
-fi
-echo ""
-
-echo "Installing ClamAV..."
-pkg install clamav -y
-if [ $? -eq 0 ]; then
-    echo "ClamAV installed successfully."
-else
-    echo "Error installing ClamAV."
-fi
-echo ""
-
-echo "Installing YARA..."
-pkg install yara -y
-if [ $? -eq 0 ]; then
-    echo "YARA installed successfully."
-else
-    echo "Error installing YARA."
-fi
-echo ""
-
-echo "Installing Radare2..."
-pkg install radare2 -y
-if [ $? -eq 0 ]; then
-    echo "Radare2 installed successfully."
-else
-    echo "Error installing Radare2."
-fi
-echo ""
-
-echo "Installing Ghidra..."
-pkg install wget -y && wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.1.3_build/ghidra_10.1.3_PUBLIC_20220421.zip && unzip ghidra_10.1.3_PUBLIC_20220421.zip
-if [ $? -eq 0 ]; then
-    echo "Ghidra installed successfully."
-else
-    echo "Error installing Ghidra."
-fi
-echo ""
-
-echo "Installing ApkTool..."
-pkg install apktool -y
-if [ $? -eq 0 ]; then
-    echo "ApkTool installed successfully."
-else
-    echo "Error installing ApkTool."
-fi
-echo ""
-
-echo "Installing Dex2jar..."
-pkg install dex2jar -y
-if [ $? -eq 0 ]; then
-    echo "Dex2jar installed successfully."
-else
-    echo "Error installing Dex2jar."
-fi
-echo ""
-
-echo "Installing JD-GUI..."
-pkg install wget -y && wget https://github.com/java-decompiler/jd-gui/releases/download/v1.6.6/jd-gui-1.6.6.jar
-if [ $? -eq 0 ]; then
-    echo "JD-GUI installed successfully."
-else
-    echo "Error installing JD-GUI."
-fi
-echo ""
-
-echo "Installing JADX..."
-pkg install jadx -y
-if [ $? -eq 0 ]; then
-    echo "JADX installed successfully."
-else
-    echo "Error installing JADX."
-fi
-echo ""
-
-echo "Installing Objection..."
-pkg install python -y && pip install objection
-if [ $? -eq 0 ]; then
-    echo "Objection installed successfully."
-else
-    echo "Error installing Objection."
-fi
-echo ""
-
-echo "Installing MobSF..."
-pkg install git -y && pkg install python -y && git clone https://github.com/MobSF/Mobile-Security-Framework-MobSF.git && cd Mobile-Security-Framework-MobSF && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "MobSF installed successfully."
-else
-    echo "Error installing MobSF."
+    echo "Error installing Nokogiri."
 fi
 echo ""
 
 echo "====================================="
-echo "Installation complete!"
+echo "Bypass root, exploits, and extra gems installation complete!"
 echo "====================================="
