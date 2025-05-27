@@ -100,12 +100,99 @@ EOF
     fi
 }
 
-# Function to alter Termux display to show Kali OS (if installed)
+# Function to alter Termux display to show Kali OS and architecture (32-bit or 64-bit)
 alter_termux_display_kali() {
+    local arch
+    arch=$(uname -m)
     if [ -d "$HOME/kalifs-arm64" ] || [ -d "$HOME/kalifs-armhf" ]; then
-        echo "Kali Linux detected in Termux. Altering display..."
-        echo "Welcome to Kali Linux (via Termux)" > $HOME/.termux/motd
+        if [[ "$arch" == *"armv7"* || "$arch" == *"armhf"* || "$arch" == *"i686"* ]]; then
+            echo "Kali Linux detected in Termux. Altering display to 32-bit..."
+            echo "Welcome to Kali Linux 32-bit (via Termux)" > $HOME/.termux/motd
+        else
+            echo "Kali Linux detected in Termux. Altering display to 64-bit..."
+            echo "Welcome to Kali Linux 64-bit (via Termux)" > $HOME/.termux/motd
+        fi
     fi
+}
+
+# Helper function for safe git clone with error handling
+safe_git_clone() {
+    local repo_url="$1"
+    local dest_dir="$2"
+    if [ -d "$dest_dir" ]; then
+        echo "Directory $dest_dir already exists, skipping clone."
+    else
+        git clone --depth 1 "$repo_url" "$dest_dir"
+        if [ $? -ne 0 ]; then
+            echo "Error cloning $repo_url to $dest_dir. Check your network or storage space."
+        else
+            echo "Cloned $repo_url to $dest_dir."
+        fi
+    fi
+}
+
+# Helper function for safe pip install
+safe_pip_install() {
+    pip install "$1"
+    if [ $? -ne 0 ]; then
+        echo "Error installing Python package: $1"
+    else
+        echo "Python package $1 installed."
+    fi
+}
+
+# Helper function for safe gem install
+safe_gem_install() {
+    gem install "$1"
+    if [ $? -ne 0 ]; then
+        echo "Error installing Ruby gem: $1"
+    else
+        echo "Ruby gem $1 installed."
+    fi
+}
+
+# Function to install more exploits, tools, and gems with error handling
+install_more_exploits_tools_gems() {
+    echo "Installing more exploits, tools, and gems with improved error handling..."
+
+    # Exploits & tools
+    pkg install git python ruby -y
+
+    safe_git_clone https://github.com/vanhauser-thc/thc-hydra.git $HOME/thc-hydra
+    safe_git_clone https://github.com/DanMcInerney/packet-sender.git $HOME/packet-sender
+    safe_git_clone https://github.com/m4ll0k/WAScan.git $HOME/WAScan
+    safe_git_clone https://github.com/sqlmapproject/sqlmap.git $HOME/sqlmap
+    safe_git_clone https://github.com/PowerShellMafia/PowerSploit.git $HOME/PowerSploit
+    safe_git_clone https://github.com/1N3/enum4linux.git $HOME/enum4linux
+    safe_git_clone https://github.com/Greenwolf/ntlm_theft.git $HOME/ntlm_theft
+    safe_git_clone https://github.com/byt3bl33d3r/CrackMapExec.git $HOME/CrackMapExec
+
+    # Python tools
+    safe_pip_install wafw00f
+    safe_pip_install shodan
+    safe_pip_install theHarvester
+    safe_pip_install impacket
+
+    # Ruby gems
+    safe_gem_install bundler
+    safe_gem_install msfrpc-client
+    safe_gem_install snmp
+    safe_gem_install net-ssh
+    safe_gem_install net-scp
+    safe_gem_install sinatra
+    safe_gem_install httparty
+
+    echo "Checking and fixing display issues..."
+    if [ ! -d "$HOME/.termux" ]; then
+        mkdir -p "$HOME/.termux"
+    fi
+    if [ ! -f "$HOME/.termux/motd" ]; then
+        echo "Welcome to your enhanced Termux environment!" > "$HOME/.termux/motd"
+    fi
+
+    echo "If you experience issues, try running: termux-reload-settings"
+    echo "If a tool fails to run, check for missing dependencies and rerun the installer."
+    echo "Installation and setup complete with improved error handling."
 }
 
 # Function to display available commands
@@ -121,6 +208,18 @@ show_commands() {
     echo "  setup_test_environment       - Setup secondary test environment"
     echo "  install_exploit_tools        - Install extra exploit tools"
     echo "  install_security_gems        - Install extra Ruby security gems"
+    echo "  install_superuser_tools      - Install superuser/rooting tools"
+    echo "  mk_user_rootsuperuser        - Create root superuser environment"
+    echo "  ensure_rootsuperuser_access  - Test and ensure root/superuser access"
+    echo "  auto_configure_advanced_user - Auto-configure user and grant advanced access"
+    echo "  install_web_tools            - Install web security tools"
+    echo "  install_android_tools        - Install Android/mobile security tools"
+    echo "  install_password_crackers    - Install password cracking tools"
+    echo "  install_network_tools        - Install network analysis tools"
+    echo "  install_fuzzing_tools        - Install fuzzing tools"
+    echo "  install_enum_tools           - Install enumeration tools"
+    echo "  install_extra_gems           - Install more Ruby gems"
+    echo "  install_more_exploits_tools_gems - Install more exploits, tools, and gems with error handling"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
@@ -152,6 +251,87 @@ install_security_gems() {
     echo "Installing Nokogiri (Ruby gem for parsing HTML/XML)..."
     pkg install ruby -y && gem install nokogiri
     echo "Ruby security gems installation complete."
+}
+
+# Function to install superuser/rooting tools for Termux
+install_superuser_tools() {
+    echo "Installing Termux superuser/rooting tools..."
+
+    # Install tsu (Termux su wrapper)
+    pkg install tsu -y
+
+    # Install Termux Sudo
+    pkg install git ncurses-utils -y
+    git clone https://gitlab.com/st42/termux-sudo.git $HOME/termux-sudo
+    cp $HOME/termux-sudo/sudo /data/data/com.termux/files/usr/bin/sudo
+    chmod 700 /data/data/com.termux/files/usr/bin/sudo
+
+    # Install suroot (Termux SU)
+    git clone https://github.com/MasterDevX/Termux-SU $HOME/Termux-SU
+    bash $HOME/Termux-SU/install.sh
+
+    # Install MagiskHide Props Config (root bypass)
+    git clone https://github.com/Magisk-Modules-Repo/MagiskHide-Props-Config.git $HOME/MagiskHide-Props-Config
+
+    # Install BusyBox
+    pkg install busybox -y
+
+    echo "Superuser/rooting tools installation complete."
+}
+
+# Function to create a root superuser in Termux
+mk_user_rootsuperuser() {
+    local ROOT_USER="rootsuperuser"
+    local ROOT_HOME="$HOME/.rootsuperuser"
+    local ROOT_ID=0
+
+    echo "Creating directory for root superuser at $ROOT_HOME..."
+    mkdir -p "$ROOT_HOME"
+
+    # Create a script to simulate root user environment
+    cat > "$ROOT_HOME/start_rootsuperuser.sh" <<EOF
+#!/data/data/com.termux/files/usr/bin/bash
+echo "Switched to root superuser environment."
+export HOME="$ROOT_HOME"
+export USER="$ROOT_USER"
+export UID=$ROOT_ID
+export PS1="# "
+cd \$HOME
+bash --login
+EOF
+    chmod +x "$ROOT_HOME/start_rootsuperuser.sh"
+    echo "Root superuser environment script created at $ROOT_HOME/start_rootsuperuser.sh"
+}
+
+# Function to test and ensure root/superuser access in Termux
+ensure_rootsuperuser_access() {
+    echo "Testing for root/superuser access in Termux..."
+    if [ "$(id -u)" = "0" ]; then
+        echo "Already running as root."
+    else
+        echo "Not running as root. Attempting to gain root access using tsu or sudo..."
+        if command -v tsu >/dev/null 2>&1; then
+            tsu -c "id" && echo "Root access granted via tsu." && return
+        fi
+        if command -v sudo >/dev/null 2>&1; then
+            sudo id && echo "Root access granted via sudo." && return
+        fi
+        echo "Root access not available. Setting up root bypass (proot/fake root)..."
+        auto_setup_root_bypass
+        echo "If you need advanced access, run: bash \$HOME/.rootsuperuser/start_rootsuperuser.sh"
+    fi
+}
+
+# Function to automatically configure user and grant advanced access if needed
+auto_configure_advanced_user() {
+    local USER_ID
+    USER_ID=$(id -u)
+    if [ "$USER_ID" != "0" ]; then
+        echo "Non-root user detected (UID: $USER_ID)."
+        ensure_rootsuperuser_access
+    else
+        echo "User is already root (UID: 0)."
+    fi
 }
 
 # Execute the functions
@@ -1057,4 +1237,107 @@ echo ""
 
 echo "====================================="
 echo "Bypass root, exploits, and extra gems installation complete!"
+echo "====================================="
+
+echo "Installing XSStrike (XSS detection tool)..."
+pkg install git python -y && git clone https://github.com/s0md3v/XSStrike.git && cd XSStrike && pip install -r requirements.txt
+if [ $? -eq 0 ]; then
+    echo "XSStrike installed successfully."
+else
+    echo "Error installing XSStrike."
+fi
+echo ""
+
+echo "Installing Sublist3r (subdomain enumeration)..."
+pkg install git python -y && git clone https://github.com/aboul3la/Sublist3r.git && cd Sublist3r && pip install -r requirements.txt
+if [ $? -eq 0 ]; then
+    echo "Sublist3r installed successfully."
+else
+    echo "Error installing Sublist3r."
+fi
+echo ""
+
+echo "Installing Nuclei (vulnerability scanner)..."
+pkg install git golang -y && git clone https://github.com/projectdiscovery/nuclei.git && cd nuclei/v2/cmd/nuclei && go build && cp nuclei $PREFIX/bin/
+if [ $? -eq 0 ]; then
+    echo "Nuclei installed successfully."
+else
+    echo "Error installing Nuclei."
+fi
+echo ""
+
+echo "Installing Amass (network mapping)..."
+pkg install golang -y && go install github.com/owasp-amass/amass/v4/...@latest
+if [ $? -eq 0 ]; then
+    echo "Amass installed successfully."
+else
+    echo "Error installing Amass."
+fi
+echo ""
+
+echo "Installing CrackMapExec (post-exploitation tool)..."
+pkg install python -y && pip install crackmapexec
+if [ $? -eq 0 ]; then
+    echo "CrackMapExec installed successfully."
+else
+    echo "Error installing CrackMapExec."
+fi
+echo ""
+
+echo "Installing Impacket (network protocols toolkit)..."
+pkg install python -y && pip install impacket
+if [ $? -eq 0 ]; then
+    echo "Impacket installed successfully."
+else
+    echo "Error installing Impacket."
+fi
+echo ""
+
+echo "Installing Evil-WinRM (Windows Remote Management shell)..."
+pkg install ruby -y && gem install evil-winrm
+if [ $? -eq 0 ]; then
+    echo "Evil-WinRM installed successfully."
+else
+    echo "Error installing Evil-WinRM."
+fi
+echo ""
+
+echo "Installing Metasploit Framework (Ruby gem)..."
+pkg install ruby -y && gem install metasploit-framework
+if [ $? -eq 0 ]; then
+    echo "Metasploit Framework gem installed successfully."
+else
+    echo "Error installing Metasploit Framework gem."
+fi
+echo ""
+
+echo "Installing Mechanize (Ruby web automation gem)..."
+pkg install ruby -y && gem install mechanize
+if [ $? -eq 0 ]; then
+    echo "Mechanize gem installed successfully."
+else
+    echo "Error installing Mechanize gem."
+fi
+echo ""
+
+echo "Installing Colorize (Ruby gem for colored output)..."
+pkg install ruby -y && gem install colorize
+if [ $? -eq 0 ]; then
+    echo "Colorize gem installed successfully."
+else
+    echo "Error installing Colorize gem."
+fi
+echo ""
+
+echo "Installing RSpec (Ruby testing framework)..."
+pkg install ruby -y && gem install rspec
+if [ $? -eq 0 ]; then
+    echo "RSpec gem installed successfully."
+else
+    echo "Error installing RSpec gem."
+fi
+echo ""
+
+echo "====================================="
+echo "Additional exploits, tools, and gems installation complete!"
 echo "====================================="
