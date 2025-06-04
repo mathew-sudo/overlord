@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+# /data/data/com.termux/files/usr/bin/bash
 
 # Display current UTC date and time in specified format
 echo "Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): $(date -u "+%Y-%m-%d %H:%M:%S")"
@@ -30,7 +30,7 @@ get_user_info() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
-# Function to display environment info for VM (fix: typo in function name)
+# Function to display environment info for VM
 display_environment() {
     echo "VM/Environment Information:"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -334,17 +334,61 @@ auto_configure_advanced_user() {
     fi
 }
 
-# Execute the functions
+# Function to install CSS, CVS, and CTX tools
+install_css_cvs_ctx_tools() {
+    echo "Installing CSS, CVS, and CTX related tools..."
+
+    # CSS: Cascading Style Sheets security tools (example: cssmin for minification, stylelint for linting)
+    echo "Installing stylelint (CSS linter)..."
+    pkg install nodejs -y
+    npm install -g stylelint
+    if [ $? -eq 0 ]; then
+        echo "stylelint installed successfully."
+    else
+        echo "Error installing stylelint."
+    fi
+
+    # CVS: Concurrent Versions System (version control)
+    echo "Installing CVS..."
+    pkg install cvs -y
+    if [ $? -eq 0 ]; then
+        echo "CVS installed successfully."
+    else
+        echo "Error installing CVS."
+    fi
+
+    # CTX: Context tools (example: jq for JSON context, xmlstarlet for XML context)
+    echo "Installing jq (JSON context processor)..."
+    pkg install jq -y
+    if [ $? -eq 0 ]; then
+        echo "jq installed successfully."
+    else
+        echo "Error installing jq."
+    fi
+
+    echo "Installing xmlstarlet (XML context processor)..."
+    pkg install xmlstarlet -y
+    if [ $? -eq 0 ]; then
+        echo "xmlstarlet installed successfully."
+    else
+        echo "Error installing xmlstarlet."
+    fi
+
+    echo "CSS, CVS, and CTX tools installation complete."
+
+    # Optional: Show versions
+    stylelint --version 2>/dev/null || echo "stylelint not found"
+    cvs --version 2>/dev/null || echo "cvs not found"
+    jq --version 2>/dev/null || echo "jq not found"
+    xmlstarlet --version 2>/dev/null || echo "xmlstarlet not found"
+}
+
+# Execute the main setup functions
 get_user_info
 display_environment
 display_config
 auto_setup_root_bypass
 alter_termux_display_kali
-
-#!/data/data/com.termux/files/usr/bin/bash
-# Termux Tool Installer script
-# Generated on 2025-05-19 05:02:14
-# This script will install the selected security tools in Termux
 
 echo "====================================="
 echo "Termux Security Tool Installer"
@@ -551,793 +595,64 @@ else
 fi
 echo ""
 
-echo "Installing Reaver..."
-pkg install reaver -y
-if [ $? -eq 0 ]; then
-    echo "Reaver installed successfully."
-else
-    echo "Error installing Reaver."
-fi
-echo ""
-
-echo "Installing Sherlock..."
-pkg install git python -y && git clone https://github.com/sherlock-project/sherlock.git && cd sherlock && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Sherlock installed successfully."
-else
-    echo "Error installing Sherlock."
-fi
-echo ""
-
-echo "Installing Zphisher..."
-pkg install git php openssh -y && git clone https://github.com/htr-tech/zphisher.git
-if [ $? -eq 0 ]; then
-    echo "Zphisher installed successfully."
-else
-    echo "Error installing Zphisher."
-fi
-echo ""
-
-echo "Installing MSFvenom Payload Creator..."
-pkg install metasploit-framework -y
-if [ $? -eq 0 ]; then
-    echo "MSFvenom Payload Creator installed successfully."
-else
-    echo "Error installing MSFvenom Payload Creator."
-fi
-echo ""
-
-echo "Installing ReconDog..."
-pkg install git python -y && git clone https://github.com/s0md3v/ReconDog.git && cd ReconDog && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "ReconDog installed successfully."
-else
-    echo "Error installing ReconDog."
-fi
-echo ""
-
-echo "Installing Kali Linux (Full)..."
-pkg install wget -y && wget -O install-nethunter-termux https://offs.ec/2MceZWr && chmod +x install-nethunter-termux && ./install-nethunter-termux kali
-if [ $? -eq 0 ]; then
-    echo "Kali Linux (Full) installed successfully."
-else
-    echo "Error installing Kali Linux (Full)."
-fi
-echo ""
-
-echo "Installing RouterSploit..."
-pkg install git python -y && git clone https://github.com/threat9/routersploit.git && cd routersploit && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "RouterSploit installed successfully."
-else
-    echo "Error installing RouterSploit."
-fi
-echo ""
-
-echo "Installing GoBuster..."
-pkg install golang -y && go get github.com/OJ/gobuster
-if [ $? -eq 0 ]; then
-    echo "GoBuster installed successfully."
-else
-    echo "Error installing GoBuster."
-fi
-echo ""
-
-echo "Installing Node.js & npm..."
-pkg install nodejs -y
-if [ $? -eq 0 ]; then
-    echo "Node.js & npm installed successfully."
-else
-    echo "Error installing Node.js & npm."
-fi
-echo ""
-
-echo "Installing TypeScript..."
-pkg install nodejs -y && npm install -g typescript
-if [ $? -eq 0 ]; then
-    echo "TypeScript installed successfully."
-else
-    echo "Error installing TypeScript."
-fi
-echo ""
-
-echo "Installing React Native Development Tools..."
-pkg install nodejs -y && npm install -g react-native-cli expo-cli
-if [ $? -eq 0 ]; then
-    echo "React Native Development Tools installed successfully."
-else
-    echo "Error installing React Native Development Tools."
-fi
-echo ""
-
-echo "Installing Python 3..."
-pkg install python -y
-if [ $? -eq 0 ]; then
-    echo "Python 3 installed successfully."
-else
-    echo "Error installing Python 3."
-fi
-echo ""
-
-echo "Installing Ruby..."
-pkg install ruby -y
-if [ $? -eq 0 ]; then
-    echo "Ruby installed successfully."
-else
-    echo "Error installing Ruby."
-fi
-echo ""
-
-echo "Installing Go..."
-pkg install golang -y
-if [ $? -eq 0 ]; then
-    echo "Go installed successfully."
-else
-    echo "Error installing Go."
-fi
-echo ""
-
-echo "Installing Rust..."
-pkg install rust -y
-if [ $? -eq 0 ]; then
-    echo "Rust installed successfully."
-else
-    echo "Error installing Rust."
-fi
-echo ""
-
-echo "Installing Java JDK..."
-pkg install openjdk-17 -y
-if [ $? -eq 0 ]; then
-    echo "Java JDK installed successfully."
-else
-    echo "Error installing Java JDK."
-fi
-echo ""
-
-echo "Installing Kotlin..."
-pkg install kotlin -y
-if [ $? -eq 0 ]; then
-    echo "Kotlin installed successfully."
-else
-    echo "Error installing Kotlin."
-fi
-echo ""
-
-echo "Installing PHP..."
-pkg install php -y
-if [ $? -eq 0 ]; then
-    echo "PHP installed successfully."
-else
-    echo "Error installing PHP."
-fi
-echo ""
-
-echo "Installing Perl..."
-pkg install perl -y
-if [ $? -eq 0 ]; then
-    echo "Perl installed successfully."
-else
-    echo "Error installing Perl."
-fi
-echo ""
-
-echo "Installing C/C++ Development..."
-pkg install clang -y
-if [ $? -eq 0 ]; then
-    echo "C/C++ Development installed successfully."
-else
-    echo "Error installing C/C++ Development."
-fi
-echo ""
-
-echo "Installing R Language..."
-pkg install r-base -y
-if [ $? -eq 0 ]; then
-    echo "R Language installed successfully."
-else
-    echo "Error installing R Language."
-fi
-echo ""
-
-echo "Installing APKTool..."
-pkg install apktool -y
-if [ $? -eq 0 ]; then
-    echo "APKTool installed successfully."
-else
-    echo "Error installing APKTool."
-fi
-echo ""
-
-echo "Installing dex2jar..."
-pkg install dex2jar -y
-if [ $? -eq 0 ]; then
-    echo "dex2jar installed successfully."
-else
-    echo "Error installing dex2jar."
-fi
-echo ""
-
-echo "Installing JDK Tools..."
-pkg install openjdk-17 -y
-if [ $? -eq 0 ]; then
-    echo "JDK Tools installed successfully."
-else
-    echo "Error installing JDK Tools."
-fi
-echo ""
-
-echo "Installing Android Tools..."
-pkg install android-tools -y
-if [ $? -eq 0 ]; then
-    echo "Android Tools installed successfully."
-else
-    echo "Error installing Android Tools."
-fi
-echo ""
-
-echo "Installing JADX..."
-pkg install jadx -y
-if [ $? -eq 0 ]; then
-    echo "JADX installed successfully."
-else
-    echo "Error installing JADX."
-fi
-echo ""
-
-echo "Installing Objection..."
-pip install objection
-if [ $? -eq 0 ]; then
-    echo "Objection installed successfully."
-else
-    echo "Error installing Objection."
-fi
-echo ""
-
-echo "Installing Mobile Security Framework..."
-pkg install git python -y && git clone https://github.com/MobSF/Mobile-Security-Framework-MobSF.git && cd Mobile-Security-Framework-MobSF && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Mobile Security Framework installed successfully."
-else
-    echo "Error installing Mobile Security Framework."
-fi
-echo ""
-
-echo "Installing Drozer..."
-pip install drozer
-if [ $? -eq 0 ]; then
-    echo "Drozer installed successfully."
-else
-    echo "Error installing Drozer."
-fi
-echo ""
-
-echo "Installing Flutter..."
-pkg install flutter -y
-if [ $? -eq 0 ]; then
-    echo "Flutter installed successfully."
-else
-    echo "Error installing Flutter."
-fi
-echo ""
-
-echo "Installing JShell..."
-pkg install openjdk-17 -y
-if [ $? -eq 0 ]; then
-    echo "JShell installed successfully."
-else
-    echo "Error installing JShell."
-fi
-echo ""
-
-echo "Installing Kali Linux with XFCE..."
-pkg install wget -y && wget -O install-nethunter-termux https://offs.ec/2MceZWr && chmod +x install-nethunter-termux && ./install-nethunter-termux kali --full
-if [ $? -eq 0 ]; then
-    echo "Kali Linux with XFCE installed successfully."
-else
-    echo "Error installing Kali Linux with XFCE."
-fi
-echo ""
-
-echo "Installing Kali Minimal GUI..."
-pkg install wget -y && wget -O install-nethunter-termux https://offs.ec/2MceZWr && chmod +x install-nethunter-termux && ./install-nethunter-termux kali --minimal
-if [ $? -eq 0 ]; then
-    echo "Kali Minimal GUI installed successfully."
-else
-    echo "Error installing Kali Minimal GUI."
-fi
-echo ""
-
-echo "Installing TigerVNC Server..."
-pkg install tigervnc -y
-if [ $? -eq 0 ]; then
-    echo "TigerVNC Server installed successfully."
-else
-    echo "Error installing TigerVNC Server."
-fi
-echo ""
-
-echo "Installing X11 Repository..."
-pkg install x11-repo -y
-if [ $? -eq 0 ]; then
-    echo "X11 Repository installed successfully."
-else
-    echo "Error installing X11 Repository."
-fi
-echo ""
-
-echo "Installing XFCE4 Desktop..."
-pkg install x11-repo -y && pkg install xfce4 -y
-if [ $? -eq 0 ]; then
-    echo "XFCE4 Desktop installed successfully."
-else
-    echo "Error installing XFCE4 Desktop."
-fi
-echo ""
-
-echo "Installing MATE Desktop..."
-pkg install x11-repo -y && pkg install mate-desktop -y
-if [ $? -eq 0 ]; then
-    echo "MATE Desktop installed successfully."
-else
-    echo "Error installing MATE Desktop."
-fi
-echo ""
-
-echo "Installing LXQt Desktop..."
-pkg install x11-repo -y && pkg install lxqt -y
-if [ $? -eq 0 ]; then
-    echo "LXQt Desktop installed successfully."
-else
-    echo "Error installing LXQt Desktop."
-fi
-echo ""
-
-echo "Installing i3 Window Manager..."
-pkg install x11-repo -y && pkg install i3 -y
-if [ $? -eq 0 ]; then
-    echo "i3 Window Manager installed successfully."
-else
-    echo "Error installing i3 Window Manager."
-fi
-echo ""
-
-echo "Installing Xorg Server..."
-pkg install x11-repo -y && pkg install xorg-server -y
-if [ $? -eq 0 ]; then
-    echo "Xorg Server installed successfully."
-else
-    echo "Error installing Xorg Server."
-fi
-echo ""
-
-echo "Installing aterm Terminal..."
-pkg install x11-repo -y && pkg install aterm -y
-if [ $? -eq 0 ]; then
-    echo "aterm Terminal installed successfully."
-else
-    echo "Error installing aterm Terminal."
-fi
-echo ""
-
-echo "Installing XFCE4 Terminal..."
-pkg install x11-repo -y && pkg install xfce4-terminal -y
-if [ $? -eq 0 ]; then
-    echo "XFCE4 Terminal installed successfully."
-else
-    echo "Error installing XFCE4 Terminal."
-fi
-echo ""
-
-echo "Installing Wireshark GTK..."
-pkg install x11-repo -y && pkg install wireshark-gtk -y
-if [ $? -eq 0 ]; then
-    echo "Wireshark GTK installed successfully."
-else
-    echo "Error installing Wireshark GTK."
-fi
-echo ""
-
-echo "Installing Firefox Browser..."
-pkg install x11-repo -y && pkg install firefox -y
-if [ $? -eq 0 ]; then
-    echo "Firefox Browser installed successfully."
-else
-    echo "Error installing Firefox Browser."
-fi
-echo ""
-
-echo "Installing Geany IDE..."
-pkg install x11-repo -y && pkg install geany -y
-if [ $? -eq 0 ]; then
-    echo "Geany IDE installed successfully."
-else
-    echo "Error installing Geany IDE."
-fi
-echo ""
-
-echo "Installing GIMP..."
-pkg install x11-repo -y && pkg install gimp -y
-if [ $? -eq 0 ]; then
-    echo "GIMP installed successfully."
-else
-    echo "Error installing GIMP."
-fi
-echo ""
-
-echo "Installing Inkscape..."
-pkg install x11-repo -y && pkg install inkscape -y
-if [ $? -eq 0 ]; then
-    echo "Inkscape installed successfully."
-else
-    echo "Error installing Inkscape."
-fi
-echo ""
-
-echo "Installing VLC Media Player..."
-pkg install x11-repo -y && pkg install vlc -y
-if [ $? -eq 0 ]; then
-    echo "VLC Media Player installed successfully."
-else
-    echo "Error installing VLC Media Player."
-fi
-echo ""
-
-echo "Installing Blender..."
-pkg install x11-repo -y && pkg install blender -y
-if [ $? -eq 0 ]; then
-    echo "Blender installed successfully."
-else
-    echo "Error installing Blender."
-fi
-echo ""
-
-echo "Installing LibreOffice..."
-pkg install x11-repo -y && pkg install libreoffice -y
-if [ $? -eq 0 ]; then
-    echo "LibreOffice installed successfully."
-else
-    echo "Error installing LibreOffice."
-fi
-echo ""
-
-echo "Installing Eclipse IDE..."
-pkg install x11-repo -y && pkg install openjdk-17 eclipse -y
-if [ $? -eq 0 ]; then
-    echo "Eclipse IDE installed successfully."
-else
-    echo "Error installing Eclipse IDE."
-fi
-echo ""
-
-echo "Installing Kali Tools with GUI..."
-pkg install wget -y && wget -O install-nethunter-termux https://offs.ec/2MceZWr && chmod +x install-nethunter-termux && ./install-nethunter-termux kali
-if [ $? -eq 0 ]; then
-    echo "Kali Tools with GUI installed successfully."
-else
-    echo "Error installing Kali Tools with GUI."
-fi
-echo ""
-
-echo "Installing VNC Server Setup..."
-pkg install tigervnc -y && mkdir -p ~/.vnc && echo '#!/data/data/com.termux/files/usr/bin/sh\nxrdb $HOME/.Xresources\nstartxfce4 &' > ~/.vnc/xstartup && chmod +x ~/.vnc/xstartup
-if [ $? -eq 0 ]; then
-    echo "VNC Server Setup installed successfully."
-else
-    echo "Error installing VNC Server Setup."
-fi
-echo ""
-
-echo "Installing VS Code Server..."
-pkg install nodejs -y && npm install -g code-server
-if [ $? -eq 0 ]; then
-    echo "VS Code Server installed successfully."
-else
-    echo "Error installing VS Code Server."
-fi
-echo ""
-
-echo "Installing Jupyter Notebook..."
-pkg install python -y && pip install jupyter notebook
-if [ $? -eq 0 ]; then
-    echo "Jupyter Notebook installed successfully."
-else
-    echo "Error installing Jupyter Notebook."
-fi
-echo ""
-
-echo "Installing Termux with Root Access..."
-pkg install tsu -y
-if [ $? -eq 0 ]; then
-    echo "Termux with Root Access installed successfully."
-else
-    echo "Error installing Termux with Root Access."
-fi
-echo ""
-
-echo "Installing Magisk for Termux..."
-pkg install curl -y && curl -sL https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/repo-fix.sh | bash
-if [ $? -eq 0 ]; then
-    echo "Magisk for Termux installed successfully."
-else
-    echo "Error installing Magisk for Termux."
-fi
-echo ""
-
-echo "Installing tsu..."
-pkg install tsu -y
-if [ $? -eq 0 ]; then
-    echo "tsu installed successfully."
-else
-    echo "Error installing tsu."
-fi
-echo ""
-
-echo "Installing Termux Sudo..."
-pkg install git -y && git clone https://gitlab.com/st42/termux-sudo.git && cd termux-sudo && pkg install ncurses-utils -y && cat sudo > /data/data/com.termux/files/usr/bin/sudo && chmod 700 /data/data/com.termux/files/usr/bin/sudo
-if [ $? -eq 0 ]; then
-    echo "Termux Sudo installed successfully."
-else
-    echo "Error installing Termux Sudo."
-fi
-echo ""
-
-echo "Installing Termux Root Packages..."
-pkg install root-repo -y
-if [ $? -eq 0 ]; then
-    echo "Termux Root Packages installed successfully."
-else
-    echo "Error installing Termux Root Packages."
-fi
-echo ""
-
-echo "Installing SuperSU..."
-pkg install wget -y && wget https://download.chainfire.eu/1220/SuperSU/SR5-SuperSU-v2.82-SR5-20171001224502.zip -O supersu.zip && unzip supersu.zip && cd supersu && sh update-binary
-if [ $? -eq 0 ]; then
-    echo "SuperSU installed successfully."
-else
-    echo "Error installing SuperSU."
-fi
-echo ""
-
-echo "Installing BusyBox..."
-pkg install busybox -y
-if [ $? -eq 0 ]; then
-    echo "BusyBox installed successfully."
-else
-    echo "Error installing BusyBox."
-fi
-echo ""
-
-echo "Installing suroot..."
-pkg install git -y && git clone https://github.com/MasterDevX/Termux-SU && cd Termux-SU && bash install.sh
-if [ $? -eq 0 ]; then
-    echo "suroot installed successfully."
-else
-    echo "Error installing suroot."
-fi
-echo ""
-
-echo "Installing Root Repository..."
-pkg install root-repo -y
-if [ $? -eq 0 ]; then
-    echo "Root Repository installed successfully."
-else
-    echo "Error installing Root Repository."
-fi
-echo ""
-
-echo "Installing ADB with Root..."
-pkg install android-tools -y && pkg install tsu -y
-if [ $? -eq 0 ]; then
-    echo "ADB with Root installed successfully."
-else
-    echo "Error installing ADB with Root."
-fi
-echo ""
-
-echo "Installing Magisk Module Manager..."
-pkg install git python -y && git clone https://github.com/Magisk-Modules-Repo/terminal_magisk_module_manager.git && cd terminal_magisk_module_manager && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Magisk Module Manager installed successfully."
-else
-    echo "Error installing Magisk Module Manager."
-fi
-echo ""
-
-echo "Installing MagiskHide Props Config (root bypass)..."
-pkg install git -y && git clone https://github.com/Magisk-Modules-Repo/MagiskHide-Props-Config.git
-if [ $? -eq 0 ]; then
-    echo "MagiskHide Props Config installed successfully."
-else
-    echo "Error installing MagiskHide Props Config."
-fi
-echo ""
-
-echo "Installing Frida (dynamic instrumentation toolkit)..."
-pkg install python -y && pip install frida-tools
-if [ $? -eq 0 ]; then
-    echo "Frida installed successfully."
-else
-    echo "Error installing Frida."
-fi
-echo ""
-
-echo "Installing RootCloak (root detection bypass)..."
-pkg install git -y && git clone https://github.com/devadvance/rootcloak.git
-if [ $? -eq 0 ]; then
-    echo "RootCloak installed successfully."
-else
-    echo "Error installing RootCloak."
-fi
-echo ""
-
-echo "Installing ExploitDB SearchSploit..."
-pkg install git -y && git clone https://github.com/offensive-security/exploitdb.git && cd exploitdb && git clone https://github.com/offensive-security/searchsploit.git
-if [ $? -eq 0 ]; then
-    echo "ExploitDB SearchSploit installed successfully."
-else
-    echo "Error installing ExploitDB SearchSploit."
-fi
-echo ""
-
-echo "Installing sqlninja (SQL Server exploit)..."
-pkg install git -y && git clone https://github.com/xxgrunge/sqlninja.git
-if [ $? -eq 0 ]; then
-    echo "sqlninja installed successfully."
-else
-    echo "Error installing sqlninja."
-fi
-echo ""
-
-echo "Installing Routersploit (exploit framework)..."
-pkg install git python -y && git clone https://github.com/threat9/routersploit.git && cd routersploit && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Routersploit installed successfully."
-else
-    echo "Error installing Routersploit."
-fi
-echo ""
-
-echo "Installing Metasploit Community Gems..."
-pkg install ruby -y && gem install rex msfrpc-client metasploit_data_models
-if [ $? -eq 0 ]; then
-    echo "Metasploit Community Gems installed successfully."
-else
-    echo "Error installing Metasploit Community Gems."
-fi
-echo ""
-
-echo "Installing Wpscan (WordPress vulnerability scanner)..."
-pkg install ruby -y && gem install wpscan
-if [ $? -eq 0 ]; then
-    echo "Wpscan installed successfully."
-else
-    echo "Error installing Wpscan."
-fi
-echo ""
-
-echo "Installing Arachni (web app security scanner)..."
-pkg install ruby -y && gem install arachni
-if [ $? -eq 0 ]; then
-    echo "Arachni installed successfully."
-else
-    echo "Error installing Arachni."
-fi
-echo ""
-
-echo "Installing Nokogiri (Ruby gem for parsing HTML/XML)..."
-pkg install ruby -y && gem install nokogiri
-if [ $? -eq 0 ]; then
-    echo "Nokogiri installed successfully."
-else
-    echo "Error installing Nokogiri."
-fi
-echo ""
-
-echo "====================================="
-echo "Bypass root, exploits, and extra gems installation complete!"
-echo "====================================="
-
-echo "Installing XSStrike (XSS detection tool)..."
-pkg install git python -y && git clone https://github.com/s0md3v/XSStrike.git && cd XSStrike && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "XSStrike installed successfully."
-else
-    echo "Error installing XSStrike."
-fi
-echo ""
-
-echo "Installing Sublist3r (subdomain enumeration)..."
-pkg install git python -y && git clone https://github.com/aboul3la/Sublist3r.git && cd Sublist3r && pip install -r requirements.txt
-if [ $? -eq 0 ]; then
-    echo "Sublist3r installed successfully."
-else
-    echo "Error installing Sublist3r."
-fi
-echo ""
-
-echo "Installing Nuclei (vulnerability scanner)..."
-pkg install git golang -y && git clone https://github.com/projectdiscovery/nuclei.git && cd nuclei/v2/cmd/nuclei && go build && cp nuclei $PREFIX/bin/
-if [ $? -eq 0 ]; then
-    echo "Nuclei installed successfully."
-else
-    echo "Error installing Nuclei."
-fi
-echo ""
-
-echo "Installing Amass (network mapping)..."
-pkg install golang -y && go install github.com/owasp-amass/amass/v4/...@latest
-if [ $? -eq 0 ]; then
-    echo "Amass installed successfully."
-else
-    echo "Error installing Amass."
-fi
-echo ""
-
-echo "Installing CrackMapExec (post-exploitation tool)..."
-pkg install python -y && pip install crackmapexec
-if [ $? -eq 0 ]; then
-    echo "CrackMapExec installed successfully."
-else
-    echo "Error installing CrackMapExec."
-fi
-echo ""
-
-echo "Installing Impacket (network protocols toolkit)..."
-pkg install python -y && pip install impacket
-if [ $? -eq 0 ]; then
-    echo "Impacket installed successfully."
-else
-    echo "Error installing Impacket."
-fi
-echo ""
-
-echo "Installing Evil-WinRM (Windows Remote Management shell)..."
-pkg install ruby -y && gem install evil-winrm
-if [ $? -eq 0 ]; then
-    echo "Evil-WinRM installed successfully."
-else
-    echo "Error installing Evil-WinRM."
-fi
-echo ""
-
-echo "Installing Metasploit Framework (Ruby gem)..."
-pkg install ruby -y && gem install metasploit-framework
-if [ $? -eq 0 ]; then
-    echo "Metasploit Framework gem installed successfully."
-else
-    echo "Error installing Metasploit Framework gem."
-fi
-echo ""
-
-echo "Installing Mechanize (Ruby web automation gem)..."
-pkg install ruby -y && gem install mechanize
-if [ $? -eq 0 ]; then
-    echo "Mechanize gem installed successfully."
-else
-    echo "Error installing Mechanize gem."
-fi
-echo ""
-
-echo "Installing Colorize (Ruby gem for colored output)..."
-pkg install ruby -y && gem install colorize
-if [ $? -eq 0 ]; then
-    echo "Colorize gem installed successfully."
-else
-    echo "Error installing Colorize gem."
-fi
-echo ""
-
-echo "Installing RSpec (Ruby testing framework)..."
-pkg install ruby -y && gem install rspec
-if [ $? -eq 0 ]; then
-    echo "RSpec gem installed successfully."
-else
-    echo "Error installing RSpec gem."
-fi
-echo ""
-
-echo "====================================="
-echo "Additional exploits, tools, and gems installation complete!"
-echo "====================================="
+echo "All selected tools installed. Run 'show_commands' for more options."
+
+# Function to install CSS, CVS, and CTX tools
+install_css_cvs_ctx_tools() {
+    echo "Installing CSS, CVS, and CTX related tools..."
+
+    # CSS: Cascading Style Sheets security tools (example: cssmin for minification, stylelint for linting)
+    echo "Installing stylelint (CSS linter)..."
+    pkg install nodejs -y
+    npm install -g stylelint
+    if [ $? -eq 0 ]; then
+        echo "stylelint installed successfully."
+    else
+        echo "Error installing stylelint."
+    fi
+
+    # CVS: Concurrent Versions System (version control)
+    echo "Installing CVS..."
+    pkg install cvs -y
+    if [ $? -eq 0 ]; then
+        echo "CVS installed successfully."
+    else
+        echo "Error installing CVS."
+    fi
+
+    # CTX: Context tools (example: jq for JSON context, xmlstarlet for XML context)
+    echo "Installing jq (JSON context processor)..."
+    pkg install jq -y
+    if [ $? -eq 0 ]; then
+        echo "jq installed successfully."
+    else
+        echo "Error installing jq."
+    fi
+
+    echo "Installing xmlstarlet (XML context processor)..."
+    pkg install xmlstarlet -y
+    if [ $? -eq 0 ]; then
+        echo "xmlstarlet installed successfully."
+    else
+        echo "Error installing xmlstarlet."
+    fi
+
+    echo "CSS, CVS, and CTX tools installation complete."
+
+    # Optional: Show versions
+    stylelint --version 2>/dev/null || echo "stylelint not found"
+    cvs --version 2>/dev/null || echo "cvs not found"
+    jq --version 2>/dev/null || echo "jq not found"
+    xmlstarlet --version 2>/dev/null || echo "xmlstarlet not found"
+}
+
+# Call the function in your main execution block if you want it to run by default:
+install_css_cvs_ctx_tools
+
+chmod +x "root security tool installer"
+./root\ security\ tool\ installer
+
+stylelint --version
+cvs --version
+jq --version
+xmlstarlet --version
