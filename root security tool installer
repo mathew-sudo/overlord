@@ -903,4 +903,4 @@ else
 fi
 
 echo "\nAll tasks complete. Exiting installer."
-exit 0
+fi
